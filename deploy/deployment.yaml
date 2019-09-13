@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maglev-admission-webhook
+  labels:
+    app: maglev-admission-webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: maglev-admission-webhook
+  template:
+    metadata:
+      labels:
+        app: maglev-admission-webhook
+    spec:
+      containers:
+      - name: maglev-admission-webhook
+        image: harshanarayana/sanic-webhook:v0.2
+        ports:
+        - containerPort: 6543
+        imagePullPolicy: IfNotPresent

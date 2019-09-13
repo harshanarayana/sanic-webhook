@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: maglev-admission-webhook
+  name: maglev-admission-webhook
+  namespace: default
+spec:
+  ports:
+  - name: https
+    port: 443
+    targetPort: 6543
+  selector:
+    app: maglev-admission-webhook
+  sessionAffinity: None
+  type: ClusterIP
