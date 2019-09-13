@@ -158,7 +158,10 @@ async def validating_webhook(request: Request):
             logger.error(f"{registry} is not in the list of allowed items")
             allowed = False
             error["code"] = 400
-            error["message"] = "Image used for container is not from an allowed registry"
+            error[
+                "message"
+            ] = f"Image used for container is not from an allowed registry. Allowed registries " \
+                f"are: {allowed_registries._registries}"
     return json({"response": {"uid": original_request["request"]["uid"], "allowed": allowed, "status": error}})
 
 
