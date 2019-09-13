@@ -1,10 +1,12 @@
-FROM python:3.7.4-stretch
+FROM harshanarayana/sanic:v1
 
-RUN pip install sanic
+# Setup Directory structures
+RUN mkdir -p /data
+RUN mkdir -p /config
+
+# Copy host files
+COPY ssl/*.pem /data/ssl/
 COPY app.py /app.py
 
-RUN mkdir -p /data
-
-COPY ssl/*.pem /data/ssl/
-
+# Configure Entry point
 ENTRYPOINT ["python", "app.py"]

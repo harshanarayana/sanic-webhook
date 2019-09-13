@@ -20,3 +20,14 @@ spec:
         ports:
         - containerPort: 6543
         imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - name: registries
+            mountPath: /config
+      volumes:
+        - name: registries
+          configMap:
+            name: allowed-registries
+            defaultMode: 0755
+            items:
+              - key: allowed.json
+                path: registries.json
