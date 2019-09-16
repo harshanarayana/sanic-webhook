@@ -8,10 +8,13 @@ from loguru import logger
 from sanic import Sanic
 from sanic.request import Request
 from sanic.response import json
+from sanic_httpauth import HTTPBasicAuth
 
 REGISTRIES_FILE = "/config/registries.json"
+DO_NOT_DELETE = "maglev.cisco.com/do-not-delete"
 
 app = Sanic(__name__)
+auth = HTTPBasicAuth()
 
 
 class AllowedRegistries:
@@ -32,7 +35,7 @@ allowed_registries = AllowedRegistries(registries=[])
 async def gather_allowed_registries():
     while True:
         try:
-            logger.info(f"Processing {REGISTRIES_FILE} for Allowed registries")
+            # logger.info(f"Processing {REGISTRIES_FILE} for Allowed registries")
             with open(REGISTRIES_FILE) as fh:
                 data = json_loader.load(fh)
 
@@ -52,7 +55,7 @@ def is_base64(s):
 
 
 # noinspection PyBroadException
-def _tacke_container_env(container):
+def _tackle_container_env(container):
     for index in range(len(container.get("env", []))):
         if (
             "secret" in container["env"][index]["name"].lower()
@@ -94,6 +97,13 @@ def parse_docker_image_name(image_name):
     return {"registry": registry, "folder": folder, "image": image, "tag": tag}
 
 
+@auth.verify_password
+def _verify_auth(username, password):
+    if username == "harshanarayana" and password == "admin123":
+        return True
+    return False
+
+
 # noinspection PyUnusedLocal
 @app.post("/mutating")
 async def mutating_webhook(request: Request):
@@ -112,7 +122,7 @@ async def mutating_webhook(request: Request):
     logger.info(f"Original Request: {original_request}")
 
     for container in modifiable_data["request"]["object"]["spec"]["template"]["spec"]["containers"]:
-        _tacke_container_env(container=container)
+        _tackle_container_env(container=container)
 
     patch = jsonpatch.JsonPatch.from_diff(original_request["request"]["object"], modifiable_data["request"]["object"])
 
@@ -158,11 +168,46 @@ async def validating_webhook(request: Request):
             logger.error(f"{registry} is not in the list of allowed items")
             allowed = False
             error["code"] = 400
-            error[
-                "message"
-            ] = f"Image used for container is not from an allowed registry. Allowed registries " \
+            error["message"] = (
+                f"Image used for container is not from an allowed registry. Allowed registries "
                 f"are: {allowed_registries._registries}"
+            )
     return json({"response": {"uid": original_request["request"]["uid"], "allowed": allowed, "status": error}})
+
+
+@app.post("/validate-delete")
+@auth.login_required
+async def validate_deletes(request: Request):
+    """
+    This validating web-hook is triggered when a DELETE operation is invoked on a pod that is
+    currently deployed.
+
+    This method can easily be enhanced to include additional checks that can conditionally
+    decide if a pod needs to be deleted or not.
+
+    Currently, this method checks if the pod has a specific annotation that will indicate that
+    deletion of this pod is not allowed, and if found, the request will be denied.
+
+    :param request:
+    :return:
+    """
+    allowed = True
+    logger.info(f"Delete request: {request.json}")
+    original_request = request.json
+    error = {}
+    logger.info(f"Checking if annotation for {DO_NOT_DELETE} is present.")
+    annotations = original_request["request"].get("oldObject", {}).get("metadata", {}).get("annotations", {})
+    logger.info(f"Annotations for the Delete pod request: {annotations}")
+    if annotations.get(DO_NOT_DELETE):
+        logger.error(f"Found the disable delete annotation {DO_NOT_DELETE}")
+        allowed = False
+        error = {
+            "core": 403,
+            "message": f"You cannot delete a pod that has the annotation {DO_NOT_DELETE} attached to it",
+        }
+    response = json({"response": {"uid": original_request["request"]["uid"], "allowed": allowed, "status": error}})
+    logger.info(f"Response {response}")
+    return response
 
 
 if __name__ == "__main__":
