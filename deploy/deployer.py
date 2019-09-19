@@ -42,6 +42,7 @@ APP_NAME = "maglev-admission-webhook"
 SECRET = "shhhh!donottell"
 NAMESPACE = "default"
 CSR_NAME = "{}.{}".format(APP_NAME, NAMESPACE)
+IMAGE = "harshanarayana/sanic-webhook:v0.2"
 
 TEMPLATE_ENV = Environment(loader=BaseLoader)
 RESOURCE_CREATION_MAP = {
@@ -135,7 +136,9 @@ def deploy(ca_bundle):
             with open(path.join(base_path, file)) as fh:
                 data = fh.read()
             template = TEMPLATE_ENV.from_string(data)  # type: Template
-            rendered_data = template.render(app_name=APP_NAME, ca_bundle=ca_bundle)
+            rendered_data = template.render(
+                app_name=APP_NAME, ca_bundle=ca_bundle, image=IMAGE
+            )
             rendered_data = safe_load(rendered_data)
             processor = RESOURCE_CREATION_MAP[rendered_data["kind"]]
             logger.info("Creating %s for %s", rendered_data["kind"], APP_NAME)
@@ -248,10 +251,19 @@ if __name__ == "__main__":
         help="Name of the App to use for creating the demo",
         default=APP_NAME,
     )
+    parser.add_argument(
+        "--image",
+        "-i",
+        help="Name of the docker image to use while running the webhook",
+        default=IMAGE,
+    )
     args = parser.parse_args()
 
     if args.app != APP_NAME:
         APP_NAME = args.app
+
+    if args.image != IMAGE:
+        IMAGE = args.image
 
     if args.mode == "deploy":
         cleanup()

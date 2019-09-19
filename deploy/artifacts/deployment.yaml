@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: {{ app_name }}
-        image: harshanarayana/sanic-webhook:v0.2
+        image: {{ image }}
         ports:
         - containerPort: 6543
         imagePullPolicy: IfNotPresent
