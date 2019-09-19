@@ -45,17 +45,7 @@ docker build . -t app_name_for_your_demo:image_version
 
 ## Setup Minikube for Webhook Authentiation
 ```bash
-./deploy/setup-minikube.sh
-
-# This will copy the files to minikube and provide a prompt waiting for your input.
-# Once you see the prompt, open a new terminal and do the following
-minikube ssh
-
-# inside the ssh session run the following
-sudo su
-cp *.yaml /var/lib/minikube/certs/
-
-# Now you can go back to the original terminal and press ENTER
+./deploy/deployer --restart-minikube
 ```
 
 ## Deploying Webhook

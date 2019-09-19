@@ -6,7 +6,7 @@ from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 from base64 import b64encode
 from jinja2 import Environment, BaseLoader, Template
-from os import path, walk
+from os import path, walk, makedirs
 from yaml import safe_load
 from datetime import datetime
 from time import sleep
@@ -129,6 +129,37 @@ def _openssl(*args):
     return check_output(cmd)
 
 
+def _minikube(*args):
+    cmd = ["minikube"] + list(args)
+    return check_output(cmd)
+
+
+def _copy_files_for_minikube_mount():
+    base_path = path.join(path.dirname(path.abspath(__file__)), "config")
+    dest_dir = path.join(
+        path.expanduser("~"), ".minikube", "files", "var/lib/minikube/certs/admission"
+    )
+    makedirs(dest_dir, exist_ok=True)
+    for file in ["admission-control-config.yaml", "kube-config.yaml"]:
+        copyfile(path.join(base_path, file), path.join(dest_dir, file))
+
+
+def restart_minikube():
+    logger.info("Stopping Minikube...")
+    _minikube("stop")
+
+    logger.info("Setting up minikube mount path with custom admission control files")
+    _copy_files_for_minikube_mount()
+
+    logger.info("Restart minikube with custom admission control configuration...")
+    _minikube(
+        "start",
+        "--kubernetes-version=v1.15.3",
+        "--extra-config=apiserver.admission-control-config-file="
+        "/var/lib/minikube/certs/admission/admission-control-config.yaml",
+    )
+
+
 def deploy(ca_bundle):
     base_path = path.join(path.dirname(path.abspath(__file__)), "artifacts")
     for root, dirs, files in walk(base_path, topdown=True):
@@ -205,13 +236,13 @@ def build_certs():
     body.status.conditions = [approval_condition]
     cert_api.replace_certificate_signing_request_approval(name=CSR_NAME, body=body)
 
-    for attempt in range(10):
+    for attempt in range(20):
         logger.info(
             "[Attempt %d] Checking if the CSR for %s is approved", attempt, CSR_NAME
         )
         csr_data = cert_api.read_certificate_signing_request(name=CSR_NAME)
-        logger.info(csr_data.status.certificate)
         if csr_data.status.certificate:
+            logger.info(csr_data.status.certificate)
             with open("/tmp/cert.data", "w") as fh:
                 fh.write(csr_data.status.certificate)
 
@@ -226,7 +257,8 @@ def build_certs():
             )
             break
         else:
-            sleep(1)
+            logger.warning("CSR for %s is not yet approved. Retrying in 5 seconds...", CSR_NAME)
+            sleep(5)
     else:
         logger.error("Failed to generate singed certs for %s", CSR_NAME)
         exit(1)
@@ -257,6 +289,13 @@ if __name__ == "__main__":
         help="Name of the docker image to use while running the webhook",
         default=IMAGE,
     )
+    parser.add_argument(
+        "--restart-minikube",
+        "-r",
+        help="Restart Minikube as part of your op with custom settings",
+        action="store_true",
+        default=False
+    )
     args = parser.parse_args()
 
     if args.app != APP_NAME:
@@ -264,6 +303,10 @@ if __name__ == "__main__":
 
     if args.image != IMAGE:
         IMAGE = args.image
+
+    if args.restart_minikube:
+        restart_minikube()
+        exit(0)
 
     if args.mode == "deploy":
         cleanup()
