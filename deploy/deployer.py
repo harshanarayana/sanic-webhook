@@ -59,9 +59,6 @@ RESOURCE_CREATION_MAP = {
 }
 
 
-NAMESPACE_REQUIRED = {""}
-
-
 def ignore_404(func):
     def wrapper(*args, **kwargs):
         try:
@@ -239,9 +236,23 @@ def build_certs():
 if __name__ == "__main__":
     parser = ArgumentParser(description="Python Admission controller demo deployer")
     parser.add_argument(
-        "--mode", "-m", choices=("deploy", "cleanup", "certs"), default="deploy"
+        "--mode",
+        "-m",
+        choices=("deploy", "cleanup", "certs"),
+        default="deploy",
+        help="Pick a mode to use for deploying the demo",
+    )
+    parser.add_argument(
+        "--app",
+        "-a",
+        help="Name of the App to use for creating the demo",
+        default=APP_NAME,
     )
     args = parser.parse_args()
+
+    if args.app != APP_NAME:
+        APP_NAME = args.app
+
     if args.mode == "deploy":
         cleanup()
         deploy(_extract_ca_bundle())
