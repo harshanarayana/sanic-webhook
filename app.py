@@ -42,7 +42,9 @@ async def gather_allowed_registries():
             registries = data["allowed"]
             allowed_registries.update(registries=registries)
         except Exception:
-            logger.exception(f"Failed to extract allowed registries from {REGISTRIES_FILE}")
+            logger.exception(
+                f"Failed to extract allowed registries from {REGISTRIES_FILE}"
+            )
         await asyncio.sleep(5)
 
 
@@ -65,7 +67,9 @@ def _tackle_container_env(container):
         ):
             if not is_base64(container["env"][index]["value"]):
                 try:
-                    container["env"][index]["value"] = base64.b64encode(container["env"][index]["value"])
+                    container["env"][index]["value"] = base64.b64encode(
+                        container["env"][index]["value"]
+                    )
                 except Exception:
                     logger.warning("Failed to B64 encode the contents of the ENV")
 
@@ -121,15 +125,22 @@ async def mutating_webhook(request: Request):
 
     logger.info(f"Original Request: {original_request}")
 
-    for container in modifiable_data["request"]["object"]["spec"]["template"]["spec"]["containers"]:
+    for container in modifiable_data["request"]["object"]["spec"]["template"]["spec"][
+        "containers"
+    ]:
         _tackle_container_env(container=container)
 
-    patch = jsonpatch.JsonPatch.from_diff(original_request["request"]["object"], modifiable_data["request"]["object"])
+    patch = jsonpatch.JsonPatch.from_diff(
+        original_request["request"]["object"], modifiable_data["request"]["object"]
+    )
 
     logger.info(f"JSON Path: {patch}")
 
     if not patch:
-        admission_response = {"allowed": True, "uid": original_request["request"]["uid"]}
+        admission_response = {
+            "allowed": True,
+            "uid": original_request["request"]["uid"],
+        }
     else:
         admission_response = {
             "allowed": True,
@@ -160,19 +171,34 @@ async def validating_webhook(request: Request):
     original_request = request.json
     modifiable_data = deepcopy(original_request)
     error = {}
-    for container in modifiable_data["request"]["object"]["spec"]["template"]["spec"]["containers"]:
-        image_details = parse_docker_image_name(container["image"])
+    if allowed_registries._registries:
+        for container in modifiable_data["request"]["object"]["spec"]["template"][
+            "spec"
+        ]["containers"]:
+            image_details = parse_docker_image_name(container["image"])
 
-        if image_details["registry"] not in allowed_registries:
-            registry = image_details["registry"]
-            logger.error(f"{registry} is not in the list of allowed items")
-            allowed = False
-            error["code"] = 400
-            error["message"] = (
-                f"Image used for container is not from an allowed registry. Allowed registries "
-                f"are: {allowed_registries._registries}"
-            )
-    return json({"response": {"uid": original_request["request"]["uid"], "allowed": allowed, "status": error}})
+            if image_details["registry"] not in allowed_registries:
+                registry = image_details["registry"]
+                logger.error(f"{registry} is not in the list of allowed items")
+                allowed = False
+                error["code"] = 400
+                error["message"] = (
+                    f"Image used for container is not from an allowed registry. Allowed registries "
+                    f"are: {allowed_registries._registries}"
+                )
+    else:
+        logger.warning(
+            f"Allowed registries webhook is enabled but the config map is missing the repo list. Allowing all"
+        )
+    return json(
+        {
+            "response": {
+                "uid": original_request["request"]["uid"],
+                "allowed": allowed,
+                "status": error,
+            }
+        }
+    )
 
 
 @app.post("/validate-delete")
@@ -196,7 +222,12 @@ async def validate_deletes(request: Request):
     original_request = request.json
     error = {}
     logger.info(f"Checking if annotation for {DO_NOT_DELETE} is present.")
-    annotations = original_request["request"].get("oldObject", {}).get("metadata", {}).get("annotations", {})
+    annotations = (
+        original_request["request"]
+        .get("oldObject", {})
+        .get("metadata", {})
+        .get("annotations", {})
+    )
     logger.info(f"Annotations for the Delete pod request: {annotations}")
     if annotations.get(DO_NOT_DELETE):
         logger.error(f"Found the disable delete annotation {DO_NOT_DELETE}")
@@ -205,11 +236,24 @@ async def validate_deletes(request: Request):
             "core": 403,
             "message": f"You cannot delete a pod that has the annotation {DO_NOT_DELETE} attached to it",
         }
-    response = json({"response": {"uid": original_request["request"]["uid"], "allowed": allowed, "status": error}})
+    response = json(
+        {
+            "response": {
+                "uid": original_request["request"]["uid"],
+                "allowed": allowed,
+                "status": error,
+            }
+        }
+    )
     logger.info(f"Response {response}")
     return response
 
 
 if __name__ == "__main__":
     app.add_task(gather_allowed_registries())
-    app.run(host="0.0.0.0", port=6543, debug=True, ssl={"cert": "/data/ssl/cert.pem", "key": "/data/ssl/key.pem"})
+    app.run(
+        host="0.0.0.0",
+        port=6543,
+        debug=True,
+        ssl={"cert": "/data/ssl/cert.pem", "key": "/data/ssl/key.pem"},
+    )
