@@ -106,3 +106,4 @@ venv.bak/
 .idea
 .vscode
 ssl/cert.pem
+ssl/key.pem
