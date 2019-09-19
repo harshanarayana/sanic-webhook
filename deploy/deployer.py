@@ -150,10 +150,7 @@ def deploy(ca_bundle):
 
 def build_certs():
     base_path = path.join(path.dirname(path.abspath(__file__)), "certs")
-    ssl_path = path.join(
-        path.dirname(path.dirname(path.abspath(__file__))),
-        "ssl"
-    )
+    ssl_path = path.join(path.dirname(path.dirname(path.abspath(__file__))), "ssl")
     with open(path.join(base_path, "csr-conf.tpl")) as fh:
         data = fh.read()
 
@@ -225,7 +222,7 @@ def build_certs():
                 "-out",
                 "/tmp/server-cert.pem",
                 "-in",
-                "/tmp/cert.data"
+                "/tmp/cert.data",
             )
             break
         else:
