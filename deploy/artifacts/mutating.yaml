@@ -1,0 +1,25 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ app_name }}
+webhooks:
+  - name: {{ app_name }}.k8s.io
+    clientConfig:
+      service:
+        name: {{ app_name }}
+        namespace: default
+        path: "/mutating"
+      caBundle: {{ ca_bundle }}
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+        apiGroups:
+          - "apps"
+        apiVersions:
+          - "*"
+        resources:
+          - "deployments"
+          - "statefulsets"
+          - "daemonsets"
+    failurePolicy: Fail

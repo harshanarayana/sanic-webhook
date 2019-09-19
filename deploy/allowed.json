@@ -1,5 +1,0 @@
-{
-  "allowed": [
-    "maglev-registry.maglev-system.svc.cluster.local:500"
-  ]
-}

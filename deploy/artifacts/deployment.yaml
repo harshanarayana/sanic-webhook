@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: maglev-admission-webhook
+  name: {{ app_name }}
   labels:
-    app: maglev-admission-webhook
+    app: {{ app_name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: maglev-admission-webhook
+      app: {{ app_name }}
   template:
     metadata:
       labels:
-        app: maglev-admission-webhook
+        app: {{ app_name }}
     spec:
       containers:
-      - name: maglev-admission-webhook
+      - name: {{ app_name }}
         image: harshanarayana/sanic-webhook:v0.2
         ports:
         - containerPort: 6543
@@ -26,7 +26,7 @@ spec:
       volumes:
         - name: registries
           configMap:
-            name: allowed-registries
+            name: {{ app_name }}
             defaultMode: 0755
             items:
               - key: allowed.json

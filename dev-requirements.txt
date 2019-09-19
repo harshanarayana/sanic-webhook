@@ -1,0 +1,3 @@
+kubernetes
+jinja2
+pylogrus

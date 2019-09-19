@@ -1,0 +1,11 @@
+apiVersion: v1
+data:
+  allowed.json: |-
+    {
+      "allowed": [
+        "maglev-registry.maglev-system.svc.cluster.local:500"
+      ]
+    }
+kind: ConfigMap
+metadata:
+  name: {{ app_name }}
