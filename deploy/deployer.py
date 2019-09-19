@@ -59,6 +59,8 @@ def ignore_404(func):
         except ApiException as ae:
             if ae.status == 404:
                 pass
+            else:
+                raise ae
 
     return wrapper
 
