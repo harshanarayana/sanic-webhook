@@ -30,7 +30,7 @@ It is no more `admissionregistration.k8s.io/v1beta1` but `admissionregistration.
 
 class: middle
 
-# What Just happened?
+# Mirror mirror on the wall
 
 ```bash
 kubectl apply -f deployment.yaml
@@ -116,7 +116,7 @@ type ServiceReference struct {
 ```
 ---
 
-# Example
+# Elementary, my dear Watson
 
 ```yaml
 apiVersion: admissionregistration.k8s.io/v1beta1
@@ -159,7 +159,15 @@ class: middle
 
 class: middle
 
-# Demo
+# La-dee-da, la-dee-da
+ 
+.right[![Default-aligned image](assets/ayne.gif)]
+
+---
+
+class: middle
+
+# It's alive! It's alive!
 
 ---
 
