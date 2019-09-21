@@ -12,6 +12,7 @@ from sanic_httpauth import HTTPBasicAuth
 
 REGISTRIES_FILE = "/config/registries.json"
 DO_NOT_DELETE = "maglev.cisco.com/do-not-delete"
+IGNORE_REGISTRY_CHECK = "maglev.cisco.com/ignore-registry-check"
 
 app = Sanic(__name__)
 auth = HTTPBasicAuth()
@@ -68,8 +69,8 @@ def _tackle_container_env(container):
             if not is_base64(container["env"][index]["value"]):
                 try:
                     container["env"][index]["value"] = base64.b64encode(
-                        container["env"][index]["value"]
-                    )
+                        container["env"][index]["value"].encode()
+                    ).decode()
                 except Exception:
                     logger.warning("Failed to B64 encode the contents of the ENV")
 
@@ -171,6 +172,21 @@ async def validating_webhook(request: Request):
     original_request = request.json
     modifiable_data = deepcopy(original_request)
     error = {}
+    annotations = modifiable_data["request"]["object"]["metadata"].get(
+        "annotations", {}
+    )
+    logger.info("Annotations")
+    if annotations:
+        if annotations.get(IGNORE_REGISTRY_CHECK) == "true":
+            return json(
+                {
+                    "response": {
+                        "uid": original_request["request"]["uid"],
+                        "allowed": True,
+                    }
+                }
+            )
+
     if allowed_registries._registries:
         for container in modifiable_data["request"]["object"]["spec"]["template"][
             "spec"

@@ -4,6 +4,8 @@ metadata:
   labels:
     app: nginx
   name: nginx
+  annotations:
+    maglev.cisco.com/ignore-registry-check: "true"
 spec:
   replicas: 1
   selector:
@@ -21,4 +23,7 @@ spec:
       - image: nginx
         name: nginx
         resources: {}
+        env:
+          - name: secret
+            value: test
 status: {}

@@ -257,7 +257,9 @@ def build_certs():
             )
             break
         else:
-            logger.warning("CSR for %s is not yet approved. Retrying in 5 seconds...", CSR_NAME)
+            logger.warning(
+                "CSR for %s is not yet approved. Retrying in 5 seconds...", CSR_NAME
+            )
             sleep(5)
     else:
         logger.error("Failed to generate singed certs for %s", CSR_NAME)
@@ -294,7 +296,7 @@ if __name__ == "__main__":
         "-r",
         help="Restart Minikube as part of your op with custom settings",
         action="store_true",
-        default=False
+        default=False,
     )
     args = parser.parse_args()
 
