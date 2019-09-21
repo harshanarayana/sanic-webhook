@@ -40,6 +40,10 @@ webhook APIs can be called by the API Server.
 
 ```bash
 eval $(minikube docker-env)
+# Uncomment the following line from Dockerfile
+
+# COPY ssl/*.pem /data/ssl/
+
 docker build . -t app_name_for_your_demo:image_version
 ```
 

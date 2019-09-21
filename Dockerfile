@@ -5,7 +5,7 @@ RUN mkdir -p /data
 RUN mkdir -p /config
 
 # Copy host files
-COPY ssl/*.pem /data/ssl/
+# COPY ssl/*.pem /data/ssl/
 COPY app.py /app.py
 
 COPY requirements.txt /tmp/requirements.txt
