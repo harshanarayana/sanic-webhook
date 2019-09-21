@@ -20,6 +20,9 @@ spec:
         ports:
         - containerPort: 6543
         imagePullPolicy: IfNotPresent
+        env:
+          - name: DEBUG
+            value: "true"
         volumeMounts:
           - name: registries
             mountPath: /config

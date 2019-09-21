@@ -2,6 +2,8 @@ import asyncio
 import base64
 import json as json_loader
 from copy import deepcopy
+from os import getenv
+from pprint import PrettyPrinter
 
 import jsonpatch
 from loguru import logger
@@ -16,6 +18,7 @@ IGNORE_REGISTRY_CHECK = "maglev.cisco.com/ignore-registry-check"
 
 app = Sanic(__name__)
 auth = HTTPBasicAuth()
+pp = PrettyPrinter()
 
 
 class AllowedRegistries:
@@ -122,6 +125,8 @@ async def mutating_webhook(request: Request):
     :return:
     """
     original_request = request.json
+    if getenv("DEBUG"):
+        logger.info("{}".format(pp.pformat(original_request)))
     modifiable_data = deepcopy(original_request)
 
     logger.info(f"Original Request: {original_request}")
@@ -170,6 +175,9 @@ async def validating_webhook(request: Request):
     """
     allowed = True
     original_request = request.json
+    if getenv("DEBUG"):
+        logger.info("{}".format(pp.pformat(original_request)))
+
     modifiable_data = deepcopy(original_request)
     error = {}
     annotations = modifiable_data["request"]["object"]["metadata"].get(
@@ -236,6 +244,8 @@ async def validate_deletes(request: Request):
     allowed = True
     logger.info(f"Delete request: {request.json}")
     original_request = request.json
+    if getenv("DEBUG"):
+        logger.info("{}".format(pp.pformat(original_request)))
     error = {}
     logger.info(f"Checking if annotation for {DO_NOT_DELETE} is present.")
     annotations = (
