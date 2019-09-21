@@ -275,6 +275,17 @@ async def validate_deletes(request: Request):
     return response
 
 
+@app.post("/log-all")
+async def log_all(request: Request):
+    original_request = request.json
+    if getenv("DEBUG"):
+        if original_request["request"]["namespace"] == "default":
+            logger.info("{}".format(pp.pformat(original_request)))
+    return json(
+        {"response": {"uid": original_request["request"]["uid"], "allowed": True}}
+    )
+
+
 if __name__ == "__main__":
     app.add_task(gather_allowed_registries())
     app.run(

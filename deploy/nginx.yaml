@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   labels:
     app: nginx
+    log-events: "true"
   name: nginx
   annotations:
     maglev.cisco.com/ignore-registry-check: "true"
@@ -11,6 +12,7 @@ spec:
   selector:
     matchLabels:
       app: nginx
+      log-events: "true"
   strategy: {}
   template:
     metadata:
@@ -18,6 +20,7 @@ spec:
         maglev.cisco.com/do-not-delete: "true"
       labels:
         app: nginx
+        log-events: "true"
     spec:
       containers:
       - image: nginx
