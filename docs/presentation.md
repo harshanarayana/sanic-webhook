@@ -78,6 +78,8 @@ type MutatingWebhook struct {
 	// +optional
 	TimeoutSeconds *int32 `json:"timeoutSeconds,omitempty"`
 	AdmissionReviewVersions []string `json:"admissionReviewVersions"`
+	// Never, IfNeeded
+	ReinvocationPolicy *ReinvocationPolicyType `json:"reinvocationPolicy,omitempty"`
 }
 ```
 ---
@@ -141,6 +143,18 @@ webhooks:
           - "deployments"
     failurePolicy: Fail
 ```
+---
+
+class: middle
+
+# Remember, remember
+
+1. Admission controls support of `https` URL
+2. If you are using `url` for configuring webhook, do not use internal service names
+3. Be careful with usage of `localhost` and `127.0.0.1`s
+4. Authentication can't be coded into the URL in `user:password@` format
+5. No fragmented Path with `#` or query parameter with `?` is allowed
+
 ---
 
 class: middle

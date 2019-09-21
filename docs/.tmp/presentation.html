@@ -4,17 +4,17 @@
   <meta charset="UTF-8">
   <title></title>
   <link rel="stylesheet" href="style.css">
-  <script src="remark.min.js"></script>  
+  <script src="remark.min.js"></script>
   <script>
-    function create() {
-      return remark.create({
-        sourceUrl: 'presentation.md',
-        ratio: '16:9',
-        highlightLines: true,
-        countIncrementalSlides: false,
-        highlightStyle: 'github'
+      function create() {
+          return remark.create({
+          sourceUrl: 'presentation.md',
+          ratio: '16:9',
+              highlightLines: true,
+              countIncrementalSlides: false,
+              highlightStyle: 'github'
       });
-    }
+      }
   </script>
 </head>
 <body onload="slideshow = create()">
