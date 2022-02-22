@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admission-demo
+  namespace: admission-demo
+  labels:
+    apps: admission-demo
+spec:
+  selector:
+    matchLabels:
+      apps: admission-demo
+  template:
+    metadata:
+      name: admission-demo
+      namespace: admission-demo
+      labels:
+        apps: admission-demo
+    spec:
+      containers:
+        - name: admission
+          image: harshanarayana/admission-demo:latest
+          imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: /mnt
+              name: tls
+          ports:
+            - containerPort: 8443
+              name: https 
+      volumes:
+        - name: tls
+          secret:
+            secretName: admission-demo-tls

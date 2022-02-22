@@ -1,15 +1,5 @@
-FROM harshanarayana/sanic:v1
+FROM sanicframework/sanic:3.8-latest
 
-# Setup Directory structures
-RUN mkdir -p /data
-RUN mkdir -p /config
+COPY apps.py apps.py
 
-# Copy host files
-COPY ssl/* /data/ssl/
-COPY app.py /app.py
-
-COPY requirements.txt /tmp/requirements.txt
-RUN pip install -r /tmp/requirements.txt
-
-# Configure Entry point
-ENTRYPOINT ["python", "app.py"]
+ENTRYPOINT ["sanic", "apps.apps"]
