@@ -20,12 +20,15 @@ webhooks:
     rules:
       - apiGroups:
           - ""
+          - "apps"
         apiVersions:
+          - "v1"
           - "v1"
         operations:
           - CREATE
         resources:
           - pods
+          - deployments
         scope: "Namespaced"
     namespaceSelector:
       matchExpressions:
