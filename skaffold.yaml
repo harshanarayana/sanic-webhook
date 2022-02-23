@@ -1,0 +1,20 @@
+apiVersion: skaffold/v2beta22
+kind: Config
+metadata:
+  name: sanic-webhook
+build:
+  tagPolicy:
+    envTemplate:
+      template: "{{.TAG}}"
+  artifacts:
+  - image: harshanarayana/admission-demo
+    docker:
+      dockerfile: Dockerfile
+deploy:
+  kubectl:
+    manifests:
+    - admission/mutating.yaml
+    - admission/validating.yaml
+    - deployment/deployment.yaml
+    - deployment/service.yaml
+

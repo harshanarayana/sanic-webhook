@@ -19,7 +19,7 @@ spec:
       containers:
         - name: admission
           image: harshanarayana/admission-demo:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /mnt
               name: tls
