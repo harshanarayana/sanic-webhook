@@ -30,10 +30,6 @@ webhooks:
           - pods
           - deployments
         scope: "Namespaced"
-    namespaceSelector:
-      matchExpressions:
-        - key: ignore-admission
-          operator: DoesNotExist
   - admissionReviewVersions:
         - v1
     clientConfig:

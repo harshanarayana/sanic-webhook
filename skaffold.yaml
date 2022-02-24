@@ -17,4 +17,5 @@ deploy:
     - admission/validating.yaml
     - deployment/deployment.yaml
     - deployment/service.yaml
+    - deployment/crb.yaml
 

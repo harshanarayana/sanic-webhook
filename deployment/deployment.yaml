@@ -20,6 +20,8 @@ spec:
         - name: admission
           image: harshanarayana/admission-demo:latest
           imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
           volumeMounts:
             - mountPath: /mnt
               name: tls

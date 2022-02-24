@@ -3,10 +3,16 @@ import json as nativejson
 import os
 from copy import deepcopy
 
+import cowsay
 import jsonpatch
+from kubernetes import client, config
 from sanic import Request, Sanic
 from sanic.log import logger
 from sanic.response import json
+
+config.load_incluster_config()
+
+v1 = client.CoreV1Api()
 
 app = Sanic(name=__name__)
 
