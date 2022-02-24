@@ -1,0 +1,49 @@
+sequenceDiagram
+    User->>kubectl: kubectl apply -f deployment.yaml
+    kubectl->>kubectl: validate
+    kubectl-->>User: validation failed
+    kubectl->>kubectl: use generator to create runtime object
+    note over kubectl: kubectl/generate/versioned/run.go
+    kubectl->>kubectl: find group and version to generate versioned client
+    kubectl->>kubeapiserver: request /apis
+    kubeapiserver-->>kubectl: OpenAPI spec 
+    kubectl->>kubectl: Find the right API version to use with version negotiating
+    note over kubectl: cached APIs can be found in ~/.kube/cache/discovery
+    kubectl->>kubectl: lookup ~/.kube and build client auth
+    kubeapiserver->>kubeapiserver: Run through auth handler configured and validate Authenticate 
+    note over kubeapiserver: authentication/request/union/union.go
+    alt  authentication success
+    kubeapiserver->>kubeapiserver: remove `Authorization` header
+    kubeapiserver->>kubeapiserver: handle authorization check
+    alt  Authorization failure
+    kubeapiserver-->>kubectl: return failed error state
+    kubectl-->>User: return failed error state
+    else: Authorization successful
+    kubeapiserver->>mutatingwehook:  Mutating Webhook Check
+    alt  AdmissionReview Allow
+    kubeapiserver->>kubeapiserver:  schema definition validation
+    alt  schema validation success
+    kubeapiserver->>validatingwebhook: Validating Webhook Chech
+    alt  AdmissionReview Allow
+    kubeapiserver->>etcd: Persist runtime object
+    kubeapiserver->>kubectl: Successful persistance message
+    kubectl->>User: Successful persistance message
+    else: Admission Review Deny
+    validatingwebhook-->>kubeapiserver: reason for denial
+    kubeapiserver-->>kubectl: reason for denial
+    kubectl->>User:  reason for denial
+    end
+    else: schema validation fail
+    kubeapiserver-->>kubectl: reason for denial
+    kubectl->>User:  reason for denial
+    end
+    else: Admission Review Deny
+    mutatingwehook-->>kubeapiserver: reason for denial
+    kubeapiserver-->>kubectl: reason for denial
+    kubectl->>User:  reason for denial
+    end
+    end
+    else: authentication failure
+    kubeapiserver-->>kubectl: return failed error state
+    kubectl-->>User: return failed error state
+    end
