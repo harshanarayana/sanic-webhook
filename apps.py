@@ -3,12 +3,15 @@ import json as nativejson
 import os
 from copy import deepcopy
 
-import cowsay
 import jsonpatch
-from kubernetes import client, config
 from sanic import Request, Sanic
 from sanic.log import logger
 from sanic.response import json
+
+from kubernetes import config, client
+
+import cowsay
+
 
 config.load_incluster_config()
 
@@ -31,6 +34,50 @@ async def audit(request: Request):
                 "warnings": [
                     "this is really fun to do but equally annoying to see",
                 ],
+            },
+        }
+    )
+
+
+@app.post("/deny-exec")
+async def deny_exec(request: Request):
+    original_request = request.json
+    pod_name = original_request["request"]["name"]
+    pod_namespace = original_request["request"]["namespace"]
+    pods = v1.list_namespaced_pod(pod_namespace)
+    for pod in pods.items:
+        logger.info(f"Pricessing pod {pod.metadata.name} for exec options")
+        oh_no = False
+        if pod.metadata.name == pod_name:
+            if pod.spec.host_pid:
+                oh_no = True
+            else:
+                for container in pod.spec.containers:
+                    if container.security_context and container.security_context.privileged:
+                        oh_no = True
+                        break
+            if oh_no:
+                return json(
+                    {
+                        "apiVersion": "admission.k8s.io/v1",
+                        "kind": "AdmissionReview",
+                        "response": {
+                            "uid": original_request["request"]["uid"],
+                            "allowed": False,
+                            "status": {
+                                "code": 403,
+                                "message": "\n\n\n" + cowsay.get_output_string("tux", "You thought you could sneak in? Not on my watch!"),
+                            },
+                        },
+                    }
+                )
+    return json(
+        {
+            "apiVersion": "admission.k8s.io/v1",
+            "kind": "AdmissionReview",
+            "response": {
+                "uid": original_request["request"]["uid"],
+                "allowed": True
             },
         }
     )
