@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kube-system
+  labels:
+    ignore-admission: "true"
+    kubernetes.io/metadata.name: kube-system
+spec: {}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: admission-demo
+  labels:
+    ignore-admission: "true"
+    kubernetes.io/metadata.name: admission-demo
+spec: {}

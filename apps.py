@@ -204,12 +204,5 @@ async def enforce_resource_requirements(request: Request):
             }
         )
 
-
-ssl = {
-    "cert": "/mnt/tls.crt",
-    "key": "/mnt/tls.key",
-}
-if os.getenv("DEV_MODE"):
+if __name__ == "__main__":
     app.run(host="0.0.0.0", port=443)
-else:
-    app.run(host="0.0.0.0", port=443, ssl=ssl)

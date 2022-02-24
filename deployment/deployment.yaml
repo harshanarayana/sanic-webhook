@@ -16,6 +16,19 @@ spec:
       labels:
         apps: admission-demo
     spec:
+      initContainers:
+        - name: admission-config
+          image: harshanarayana/admission-demo:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+          args:
+            - /init.sh
+          volumeMounts:
+            - mountPath: /mnt
+              name: tls
+            - mountPath: /usr/local/bin/kubectl
+              name: kubectl
       containers:
         - name: admission
           image: harshanarayana/admission-demo:latest
@@ -32,3 +45,6 @@ spec:
         - name: tls
           secret:
             secretName: admission-demo-tls
+        - name: kubectl
+          hostPath:
+            path: /usr/bin/kubectl

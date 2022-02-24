@@ -12,10 +12,14 @@ build:
       dockerfile: Dockerfile
 deploy:
   kubectl:
+    hooks:
+      before:
+        - host:
+            command:
+              - "./setup.sh"
     manifests:
-    - admission/mutating.yaml
-    - admission/validating.yaml
+    - deployment/namespace.yaml
+    - deployment/crb.yaml
+    - certs/cert.yaml
     - deployment/deployment.yaml
     - deployment/service.yaml
-    - deployment/crb.yaml
-
