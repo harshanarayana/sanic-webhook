@@ -2,16 +2,14 @@ import base64
 import json as nativejson
 import os
 from copy import deepcopy
+from pprint import pformat
 
+import cowsay
 import jsonpatch
+from kubernetes import client, config
 from sanic import Request, Sanic
 from sanic.log import logger
 from sanic.response import json
-
-from kubernetes import config, client
-
-import cowsay
-
 
 config.load_incluster_config()
 
@@ -22,7 +20,7 @@ app = Sanic(name=__name__)
 
 @app.post("/audit")
 async def audit(request: Request):
-    logger.info(f"Obtained Request {request.json}")
+    logger.info(f"Obtained Request \n {pformat(request.json)}")
     original_request = request.json
     return json(
         {
@@ -53,7 +51,10 @@ async def deny_exec(request: Request):
                 oh_no = True
             else:
                 for container in pod.spec.containers:
-                    if container.security_context and container.security_context.privileged:
+                    if (
+                        container.security_context
+                        and container.security_context.privileged
+                    ):
                         oh_no = True
                         break
             if oh_no:
@@ -66,7 +67,11 @@ async def deny_exec(request: Request):
                             "allowed": False,
                             "status": {
                                 "code": 403,
-                                "message": "\n\n\n" + cowsay.get_output_string("tux", "You thought you could sneak in? Not on my watch!"),
+                                "message": "\n\n\n"
+                                + cowsay.get_output_string(
+                                    "tux",
+                                    "You thought you could sneak in? Not on my watch!",
+                                ),
                             },
                         },
                     }
@@ -75,10 +80,7 @@ async def deny_exec(request: Request):
         {
             "apiVersion": "admission.k8s.io/v1",
             "kind": "AdmissionReview",
-            "response": {
-                "uid": original_request["request"]["uid"],
-                "allowed": True
-            },
+            "response": {"uid": original_request["request"]["uid"], "allowed": True},
         }
     )
 
@@ -203,6 +205,7 @@ async def enforce_resource_requirements(request: Request):
                 },
             }
         )
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=443)
