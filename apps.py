@@ -171,7 +171,7 @@ async def enforce_resource_requirements(request: Request):
             logger.info(
                 f"Processing container {container['name']} for resource requirements"
             )
-            if container.get("resources") is None:
+            if not container.get("resources"):
                 logger.error(
                     f"Container {container['name']} is missing resource information"
                 )
